@@ -8,30 +8,30 @@ namespace SimpleCache;
 class SimpleCache implements \ArrayAccess {
 	private $dir;
 
-	public function __construct($dir, $maxAge = null, $gcInterval = 86400) {
+	public function __construct(string $dir, int $maxAge = 0, int $gcInterval = 86400) {
 		$this->dir = rtrim(realpath($dir), \DIRECTORY_SEPARATOR);
 		$this->gc($maxAge, $gcInterval);
 	}
 
-	public function offsetSet($key, $value) {
-		file_put_contents($this->dir . \DIRECTORY_SEPARATOR . $key, serialize($value));
+	public function offsetSet(mixed $key, mixed $value): void {
+		file_put_contents($this->dir . \DIRECTORY_SEPARATOR . (string) $key, serialize($value));
 	}
 
-	public function offsetGet($key) {
-		touch($this->dir . \DIRECTORY_SEPARATOR . $key);
-		if ($this->offsetExists($key)) return unserialize(file_get_contents($this->dir . \DIRECTORY_SEPARATOR . $key));
+	public function offsetGet(mixed $key): mixed {
+		touch($this->dir . \DIRECTORY_SEPARATOR . (string) $key);
+		if ($this->offsetExists($key)) return unserialize(file_get_contents($this->dir . \DIRECTORY_SEPARATOR . (string) $key));
 		else return null;
 	}
 
-	public function offsetExists($key) {
-		return is_file($this->dir . \DIRECTORY_SEPARATOR . $key);
+	public function offsetExists(mixed $key): bool {
+		return is_file($this->dir . \DIRECTORY_SEPARATOR . (string) $key);
 	}
 
-	public function offsetUnset($key) {
-		unlink($this->dir . \DIRECTORY_SEPARATOR . $key);
+	public function offsetUnset(mixed $key): void {
+		unlink($this->dir . \DIRECTORY_SEPARATOR . (string) $key);
 	}
 
-	private function gc($maxAge, $gcInterval) {
+	private function gc(int $maxAge, int $gcInterval) {
 		if ($maxAge && rand(1,100) == 1) {
 			$lastRun = $this['___cacheGC'];
 			if ($lastRun+$gcInterval < time()) {
